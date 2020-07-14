@@ -49,7 +49,11 @@ void main() {
 
 const normalFS = colorFS
 
-const identityMat = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+const identityMat = [
+  1, 0, 0, 0, 
+  0, 1, 0, 0, 
+  0, 0, 1, 0, 
+  0, 0, 0, 1]
 
 const { vec2, mat4, tex2D } = SchemaTypes
 

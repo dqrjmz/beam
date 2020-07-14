@@ -1,5 +1,8 @@
 /* eslint-env browser */
 
+/**
+ * 使用Beam库编写webgl程序
+ */
 import { Beam, ResourceTypes } from '../../../src/index.js'
 import { LambertLighting } from '../../shaders/basic-lighting-shader.js'
 import { parseOBJ } from '../../utils/obj-loader.js'
@@ -7,13 +10,20 @@ import { createCamera } from '../../utils/camera.js'
 import { create, rotate } from '../../utils/mat4.js'
 const { VertexBuffers, IndexBuffer, Uniforms } = ResourceTypes
 
+// 获取canvas元素
 const canvas = document.querySelector('canvas')
+// 将canvas的高度宽度，设置为body的高度，宽度
 canvas.height = document.body.offsetHeight
 canvas.width = document.body.offsetWidth
+// 实例化Beam类
 const beam = new Beam(canvas)
+// 创建着色器程序
 const shader = beam.shader(LambertLighting)
+// 创建视图举证
 const cameraMats = createCamera({ eye: [0, 6, 6] }, { canvas })
+// 创建纹理对象
 const matrices = beam.resource(Uniforms, cameraMats)
+// 创建灯光
 const light = beam.resource(Uniforms)
 const modelBuffers = []
 

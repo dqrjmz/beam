@@ -1,6 +1,8 @@
+// es6模块库的ts定义文件
 export = Beam
 
 declare namespace Beam {
+    // 
     export enum SchemaTypes {
         vec4 = 'vec4',
         vec3 = 'vec3',
@@ -69,8 +71,14 @@ declare namespace Beam {
 
         clear(color?: [Number, Number, Number, Number]): this
 
+        /**
+         * 着色器模板
+         * @param shaderTemplate 
+         */
         shader<B extends Buffers, U extends Uniforms, T extends Textures>(shaderTemplate: {
+            // 顶点着色器
             vs: string,
+            // 片元着色器
             fs: string,
             buffers?: B,
             uniforms?: U,

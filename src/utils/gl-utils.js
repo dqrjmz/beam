@@ -3,6 +3,11 @@ import * as miscUtils from './misc-utils.js'
 
 const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
 
+/**
+ * 获取webgl渲染上下文实例
+ * @param {*} canvas dom元素
+ * @param {*} contextAttributes 上下文属性
+ */
 export const getWebGLInstance = (canvas, contextAttributes) => {
   return canvas.getContext('webgl', contextAttributes)
 }
@@ -10,89 +15,147 @@ export const getWebGLInstance = (canvas, contextAttributes) => {
 export const getExtensions = (gl, config) => {
   const extensions = {}
   config.extensions.forEach(name => {
+    // 获取配置的扩展名的扩展对象，启用一个webgl拓展
     extensions[name] = gl.getExtension(name)
   })
   return extensions
 }
 
+/**
+ * 编译着色器
+ * @param {*} gl webgl渲染上下文
+ * @param {*} type 着色器类型（顶点，片元
+ * @param {*} source 着色器字符串程序
+ */
 const compileShader = (gl, type, source) => {
+  // 创建着色器对象
   const shader = gl.createShader(type)
+  // glsl字符串代码
   gl.shaderSource(shader, source)
+  // 编译着色器程序，使其成为二进制数据，然后就可以被WebGLProgram对象使用
   gl.compileShader(shader)
-
+  // 获取着色器程序被编译的状态
   if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    // 获取着色器编译失败的日志
     console.error('Error compiling shaders', gl.getShaderInfoLog(shader))
+    // 删除着色器程序
     gl.deleteShader(shader)
     return null
   }
   return shader
 }
 
+/**
+ * 初始化着色器程序
+ * @param {*} gl webgl渲染上下文
+ * @param {*} defines glsl es 语言中的宏命令
+ * @param {*} vs 顶点着色器字符串程序
+ * @param {*} fs 片元着色器字符串程序
+ */
 const initShaderProgram = (gl, defines, vs, fs) => {
+  // 遍历宏命令，添加到着色器程序中
   const defineStr = Object.keys(defines).reduce((str, key) => (
     defines[key] ? str + `#define ${key} ${defines[key]}\n` : ''
   ), '')
-
+  // 编译顶点着色器
   const vertexShader = compileShader(gl, gl.VERTEX_SHADER, defineStr + vs)
+  // 编译片元着色器
   const fragmentShader = compileShader(gl, gl.FRAGMENT_SHADER, defineStr + fs)
-
+  // 创建着色器程序
   const shaderProgram = gl.createProgram()
+  // 向着色器程序添加 【顶点/片元】着色器
   gl.attachShader(shaderProgram, vertexShader)
   gl.attachShader(shaderProgram, fragmentShader)
+  // 连接给定的着色器程序，从而完成为 
+  // 程序的片元和顶点着色器准备gpu代码的过程
   gl.linkProgram(shaderProgram)
-
+  // 返回WebGLProgram的信息
   if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
     console.error('Error initing program', gl.getProgramInfoLog(shaderProgram))
     return null
   }
-
+  // 着色器程序
   return shaderProgram
 }
 
+/**
+ * 初始化着色器引用
+ * @param {*} gl webgl渲染上下文
+ * @param {*} defines glsl es中的宏命令
+ * @param {*} schema 
+ * @param {*} vs 
+ * @param {*} fs 
+ */
 export const initShaderRefs = (gl, defines, schema, vs, fs) => {
+  // 着色器程序
   const program = initShaderProgram(gl, defines, vs, fs)
   // map to { pos: { type, location } }
+  // 着色器中attribute属性变量
   const attributes = miscUtils.mapValue(schema.buffers, (attributes, key) => ({
     type: attributes[key].type,
     location: gl.getAttribLocation(program, key)
   }))
+  // 着色器中的uniform变量集合
   const uniforms = miscUtils.mapValue({
     ...schema.uniforms, ...schema.textures
   }, (uniforms, key) => ({
     type: uniforms[key].type,
     location: gl.getUniformLocation(program, key)
   }))
-
+  // 着色器程序 属性的存储地址
   return { program, attributes, uniforms }
 }
 
+/**
+ * 清空
+ * @param {*} gl 
+ * @param {*} color 
+ */
 export const clear = (gl, color) => {
   const [r, g, b, a] = color
+  // 设置webgl系统的视口大小
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
+  // 设置canvas的背景色
   gl.clearColor(r, g, b, a)
+  // 清除深度
   gl.clearDepth(1)
+  // 清除颜色缓冲区，深入缓冲区
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+  // 开启隐藏面消除
   gl.enable(gl.DEPTH_TEST)
 }
 
+// 初始化顶点缓冲区
 export const initVertexBuffers = (gl, state) => {
+  // 缓冲区对象容器
   const buffers = {}
+  // 获取状态对象的key
   const bufferKeys = Object.keys(state)
   bufferKeys.forEach(key => {
+    // 创建一个缓冲区对象
     const buffer = gl.createBuffer()
+    // 将缓冲区对象添加给对应的key
     buffers[key] = buffer
     updateVertexBuffer(gl, buffers[key], state[key])
   })
   return buffers
 }
 
+/**
+ * 更新顶点缓冲区
+ * @param {*} gl 
+ * @param {*} buffer 缓冲对象
+ * @param {*} array 新数据
+ */
 export const updateVertexBuffer = (gl, buffer, array) => {
   const data = array instanceof Float32Array
     ? array : new Float32Array(array)
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+  // 新数据绑定到缓冲区对象上
   gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW)
 }
 
+// 销毁缓冲区对象
 export const destroyVertexBuffer = (gl, buffer) => {
   gl.deleteBuffer(buffer)
 }

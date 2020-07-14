@@ -1,6 +1,12 @@
 import { ResourceTypes } from './consts.js'
 import * as glUtils from './utils/gl-utils.js'
 
+/**
+ * 创建资源，缓冲区
+ * @param {*} gl webgl渲染上下文
+ * @param {*} type 资源类型
+ * @param {*} state 资源数据
+ */
 export const createResource = (gl, type, state) => {
   const Types = ResourceTypes
   class Resource {
@@ -8,18 +14,26 @@ export const createResource = (gl, type, state) => {
     set (key, val) { this.state[key] = val; return this }
   }
 
+  // 顶点缓冲区资源
   class VertexBuffersResource extends Resource {
+    // 初始化顶点缓冲区
     constructor () {
       super()
       this.buffers = glUtils.initVertexBuffers(gl, state)
     }
 
+    /**
+     * 设置新的值给缓冲区
+     * @param {*} key glsl es中的一个变量
+     * @param {*} val 变量的值
+     */
     set (key, val) {
       this.state[key] = val
       glUtils.updateVertexBuffer(gl, this.buffers[key], val)
       return this
     }
 
+    // 销毁指定的缓冲区
     destroy (key) {
       glUtils.destroyVertexBuffer(gl, this.buffers[key])
       delete this.state[key]

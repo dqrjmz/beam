@@ -81,21 +81,32 @@ iframe { flex: 1; height: 100vh; }
     <iframe frameborder="0" scrolling="no"></iframe>
   </body>
 <script>
+  // 获取iframe 元素
 const iframe = document.querySelector('iframe')
+// 设置iframe元素的src属性
 iframe.src = window.location.hash
   ? './gallery/pages/' + window.location.hash.replace('#', '') + '.html'
   : './gallery/pages/basic-graphics/hello-world.html'
 
+// 将字符串以空哥进行分割成数组，将数组每个元素经小写化，将数组使用`-`连接符号进行连接成字符串
 const toKebab = str => str.split(' ').map(x => x.toLowerCase()).join('-')
+// 得到处理后的字串传
 const toSrc = (title, li) => `${toKebab(title)}/${toKebab(li)}`
-
+// 获取所有的ul元素，并进行遍历
 document.querySelectorAll('ul').forEach(ul => {
+  // 获取ul的子元素
   const list = [...ul.children]
+  // 获取ul的前一个兄弟元素的文本内容
   const title = ul.previousElementSibling.innerText
+  // 遍历子元素
   list.forEach(li => {
+    // 给子元素添加click事件
     li.onclick = () => {
+      // 获取地址字符串
       const src = toSrc(title, li.innerText)
+      // 添加到地址的哈希部分
       window.location.hash = src
+      // 将文件地址赋值给iframe元素的src属性，打开文件
       iframe.src = './gallery/pages/' + src + '.html'
     }
   })
